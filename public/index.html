@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>دژ جاویدان: نبردهای ایران باستان</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#d4a843;--crimson:#9e2a2b;--obsidian:#0b0c15;--glass:rgba(255,255,255,0.06);--neon:#00e5ff;--neon2:#ff2d95;--font:'Vazirmatn',Tahoma,sans-serif;}
+  *{box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:linear-gradient(180deg,#0b0c15,#150e1a);color:#f0e6d2;font-family:var(--font);height:100%;overflow:hidden;user-select:none;}
+  #app{width:100%;height:100%;display:flex;flex-direction:column;position:relative;}
+  header{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:rgba(11,12,21,0.85);backdrop-filter:blur(14px) saturate(140%);border-bottom:1px solid rgba(212,168,67,0.15);flex-shrink:0;z-index:10;}
+  .logo{font-weight:900;font-size:16px;color:var(--gold);letter-spacing:0.5px;display:flex;align-items:center;gap:8px;}
+  .logo::before{content:"⚔";font-size:20px;color:var(--neon);}
+  .stats-row{display:flex;gap:10px;font-size:12px;font-weight:700;color:#e7d8b0;}
+  .stat-pill{background:rgba(212,168,67,0.12);border:1px solid rgba(212,168,67,0.25);padding:3px 8px;border-radius:999px;}
+  main{flex:1;position:relative;overflow:hidden;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;background:linear-gradient(180deg,#0b0c15 0%,#1a1222 60%,#2a1a30 100%);}
+  .overlay{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:12px;}
+  .overlay > *{pointer-events:auto;}
+  .hud-top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .panel{background:var(--glass);border:1px solid rgba(212,168,67,0.15);backdrop-filter:blur(12px);border-radius:14px;padding:10px 14px;margin-bottom:10px;max-width:320px;border-left:3px solid var(--gold);box-shadow:0 4px 30px rgba(0,0,0,0.3);}
+  .panel h2{font-size:13px;color:var(--gold);margin:0 0 6px;display:flex;align-items:center;gap:6px;}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+  button{font-family:var(--font);cursor:pointer;border:none;border-radius:10px;padding:10px 12px;font-weight:700;font-size:13px;background:linear-gradient(135deg,#2a2612,#3a2e14);color:#f0e6d2;border:1px solid rgba(212,168,67,0.35);box-shadow:0 2px 10px rgba(212,168,67,0.15);transition:transform .08s ease, box-shadow .2s ease;}
+  button:active{transform:scale(0.96);}
+  button.accent{background:linear-gradient(135deg,#9e2a2b,#6e1e1f);border-color:rgba(255,70,70,0.4);color:#fff;}
+  button.neon{background:linear-gradient(135deg,#002233,#003344);border-color:rgba(0,229,255,0.4);color:#e0faff;}
+  .hidden{display:none!important;}
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;background:rgba(11,12,21,0.95);backdrop-filter:blur(20px);z-index:20;padding:14px;overflow-y:auto;}
+  .screen h1{font-size:22px;color:var(--gold);margin:0 0 8px;text-align:center;}
+  .screen h3{font-size:14px;color:#e7cfa8;margin:10px 0 6px;border-bottom:1px solid rgba(212,168,67,0.2);padding-bottom:4px;}
+  .card{background:rgba(255,255,255,0.04);border:1px solid rgba(212,168,67,0.2);border-radius:12px;padding:10px;margin-bottom:10px;}
+  .card-row{display:flex;justify-content:space-between;align-items:center;margin-top:4px;font-size:12px;color:#d0c0a0;}
+  .chapter{display:flex;align-items:center;gap:10px;padding:10px;background:linear-gradient(90deg,rgba(212,168,67,0.08),rgba(212,168,67,0.02));border:1px solid rgba(212,168,67,0.2);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:background .2s;}
+  .chapter:hover{background:linear-gradient(90deg,rgba(212,168,67,0.2),rgba(212,168,67,0.08));}
+  .chapter-icon{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,#2a1e12,#3a2e18);display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid rgba(212,168,67,0.25);}
+  .chapter-info h4{margin:0;font-size:14px;color:#e7cfa8;}
+  .chapter-info p{margin:2px 0 0;font-size:11px;color:#a89878;}
+  #chest-modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(10px);}
+  .chest-box{background:linear-gradient(160deg,#1a1105,#0f0803);border:2px solid var(--gold);border-radius:20px;padding:24px;text-align:center;max-width:320px;box-shadow:0 0 60px rgba(212,168,67,0.25);animation:chestPop .6s ease-out;}
+  @keyframes chestPop{0%{transform:scale(0.5);opacity:0;}70%{transform:scale(1.05);opacity:1;}100%{transform:scale(1);opacity:1;}}
+  .gold-text{font-weight:900;color:var(--gold);font-size:28px;text-shadow:0 0 20px rgba(212,168,67,0.6);}
+  .rewards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+  .rew{background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.3);border-radius:8px;padding:8px;font-size:12px;color:#eee;}
+  .rew strong{display:block;color:var(--gold);font-size:16px;}
+  #shop-modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);}
+  .shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:360px;padding:16px;}
+  .shop-card{background:rgba(255,255,255,0.05);border:1px solid rgba(212,168,67,0.25);border-radius:14px;padding:14px;text-align:center;}
+  .shop-card h4{margin:0 0 4px;font-size:16px;color:var(--gold);}
+  .shop-card p{margin:0 0 8px;font-size:12px;color:#ccc;}
+  .tag{font-size:11px;background:rgba(0,229,255,0.15);border:1px solid rgba(0,229,255,0.3);padding:2px 6px;border-radius:4px;color:#c0f0ff;display:inline-block;}
+  .enemy-label{position:absolute;top:8px;right:12px;background:rgba(255,50,60,0.85);color:#fff;padding:4px 10px;border-radius:8px;font-weight:900;font-size:12px;border-left:3px solid #ff3333;}
+  @media (max-height:520px){header{height:48px;} .logo{font-size:13px;} .stats-row{font-size:11px;}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="logo">دژ جاویدان</div>
+  <div class="stats-row" id="hdrStats">
+    <span class="stat-pill">🪙 <span id="hGold">0</span></span>
+    <span class="stat-pill">💎 <span id="hGems">0</span></span>
+    <span class="stat-pill">⚔️ <span id="hElo">1000</span></span>
+  </div>
+</header>
+
+<main>
+  <canvas id="battle"></canvas>
+
+  <!-- HUD overlay -->
+  <div class="overlay">
+    <div class="hud-top">
+      <div class="panel" id="defenderPanel">
+        <h2>⚔️ دفاع از ایران</h2>
+        <div style="font-size:12px;color:#d0c0a0;margin-bottom:6px;">مرحله <span id="stageLabel">1</span> — دژ سطح <span id="castleLevel">1</span></div>
+        <div class="btn-row">
+          <button onclick="startDefender()">🎯 دفاع</button>
+          <button onclick="openCampaign()">🗺️ نقشه</button>
+          <button onclick="openPvP()">⚔️ نبرد</button>
+          <button onclick="openClan()">🏛️ هزارم</button>
+        </div>
+      </div>
+      <div class="panel" id="attackerPanel" style="display:none;">
+        <h2>🐉 حمله توران</h2>
+        <div style="font-size:12px;color:#d0c0a0;margin-bottom:6px;">انرژی تاریک: <span id="darkEnergy">0</span> / 100</div>
+        <div class="btn-row">
+          <button onclick="spawnWave()">🐺 موج</button>
+          <button onclick="castDarkSpell()">🌑 طلسم</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="switchFaction('defender')" id="btnDef">🛡️ مدافع</button>
+      <button onclick="switchFaction('attacker')" id="btnAtt" class="accent">🐉 مهاجم</button>
+    </div>
+  </div>
+
+  <!-- Campaign screen -->
+  <section id="screenCampaign" class="screen hidden">
+    <h1>📜 نبردهای باستانی — ۵ عصر</h1>
+    <div id="chapters"></div>
+    <div style="margin-top:8px;"><button onclick="closeCampaign()">بازگشت به دژ</button></div>
+  </section>
+
+  <!-- PvP screen -->
+  <section id="screenPvP" class="screen hidden">
+    <h1>⚔️ نبرد ۱ به ۱</h1>
+    <div id="pvpList"></div>
+    <div style="margin-top:8px;"><button onclick="closePvP()">بازگشت</button></div>
+  </section>
+
+  <!-- Clan screen -->
+  <section id="screenClan" class="screen hidden">
+    <h1>🏛️ هزارم — نبرد جهان</h1>
+    <div id="clanBossPanel"></div>
+    <div style="margin-top:8px;"><button onclick="attackBoss()">⚔️ حمله به رئیس</button> <button onclick="closeClan()">بازگشت</button></div>
+  </section>
+
+  <!-- Shop / Stars -->
+  <section id="screenShop" class="screen hidden">
+    <h1>💫 فروشگاه ستاره‌ها (XTR)</h1>
+    <div class="shop-grid" id="shopGrid"></div>
+    <div style="margin-top:8px;text-align:center;"><button onclick="closeShop()">بستن</button></div>
+  </section>
+</main>
+
+</div>
+
+<!-- Chest modal -->
+<div id="chest-modal" class="hidden">
+  <div class="chest-box">
+    <h2>📦 صندوق غنایم باز شد!</h2>
+    <div class="gold-text" id="chestTier">طلایی</div>
+    <div class="rewards" id="chestRewards"></div>
+    <button onclick="closeChest()" style="margin-top:14px;width:100%;">✨ بستن</button>
+  </div>
+</div>
+
+<!-- Shop modal (overlay) -->
+<div id="shop-modal" class="hidden" onclick="closeShop()">
+  <div class="shop-grid" onclick="event.stopPropagation()">
+    <div class="shop-card">
+      <h4>💎 بسته جواهر (۵۰)</h4>
+      <p>۵۰ جواهر برای تقویت قلعه</p>
+      <span class="tag"> stars 50 XTR</span><br>
+      <button onclick="buyStars('gem_pack')">خرید</button>
+    </div>
+    <div class="shop-card">
+      <h4>👑 بلیط نبرد سلطنتی</h4>
+      <p>دسترسی به بلیط نبرد فصلی</p>
+      <span class="tag"> stars 100 XTR</span><br>
+      <button onclick="buyStars('pass')">خرید</button>
+    </div>
+    <div class="shop-card">
+      <h4>📦 صندوق فوری</h4>
+      <p>باز کردن فوری صندوق طلایی</p>
+      <span class="tag"> stars 10 XTR</span><br>
+      <button onclick="buyStars('instant_chest')">خرید</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============== TELEGRAM SERVERLESS BRIDGE ============== */
+let tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+try { if(tg){ tg.expand(); tg.ready(); } } catch(e){}
+
+function serverlessCall(endpoint, payload) {
+  return new Promise((resolve) => {
+    if (tg && tg.Serverless && typeof tg.Serverless.call === 'function') {
+      try { tg.Serverless.call(endpoint, payload).then(resolve).catch(() => resolve({ok:true})); }
+      catch(e){ resolve({ok:true}); }
+    } else {
+      // localStorage mock fallback
+      const mock = JSON.parse(localStorage.getItem('tg_mock_' + endpoint) || '{}');
+      if (endpoint === 'syncProfile') { localStorage.setItem('tg_mock_profile', JSON.stringify(payload)); resolve({ok:true,userId:payload.userId||1}); }
+      else if (endpoint === 'completeStage') { localStorage.setItem('tg_mock_stage', JSON.stringify({stage:payload.stage})); resolve({ok:true,stage:payload.stage}); }
+      else if (endpoint === 'pvpArena') { resolve({ok:true,targets:[{userId:2,username:'ارسلان',eloRating:1050}]}); }
+      else if (endpoint === 'clanBoss') { resolve({ok:true,clan:{id:1,name:'هزارم',bossHp:800,bossMaxHp:1000,bossLevel:2,totalScore:1200}}); }
+      else if (endpoint === 'createStarsInvoice') { resolve({ok:true,url:'#',item:payload.item,amount:50}); }
+      else if (endpoint === 'submitRaid') { resolve({ok:true,notified:payload.defenderId||2}); }
+      else { resolve({ok:true}); }
+    }
+  });
+}
+
+/* ============== AUDIO SYNTH ============== */
+let audioCtx = null;
+function ensureAudio() { try { if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); } catch(e){} }
+function playTone(freq, dur, vol, type='triangle', ramp=0) {
+  ensureAudio(); try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    if(ramp>0) o.frequency.exponentialRampToValueAtTime(freq*0.5, audioCtx.currentTime+dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + dur);
+  } catch(e){}
+}
+function sfxBow(){ playTone(900,0.12,0.1,'triangle'); playTone(1400,0.08,0.06,'triangle',1); }
+function sfxHit(){ playTone(500,0.15,0.12,'sine'); playTone(150,0.3,0.08,'triangle'); }
+function sfxExplode(){ playTone(80,0.4,0.2,'sawtooth'); playTone(200,0.5,0.15,'sine'); }
+function sfxCoin(){ playTone(1100,0.1,0.08,'triangle'); playTone(1600,0.15,0.08,'triangle'); }
+function sfxChest(){ playTone(600,0.3,0.15,'triangle'); playTone(900,0.3,0.15,'triangle'); playTone(1200,0.8,0.2,'sine'); }
+
+/* ============== STATE ============== */
+let state = { faction:'defender', stage:1, gold:200, gems:10, elo:1000, castleLevel:1, bowLevel:1, darkEnergy:100, defLayout:'[]', unlocked:'[]', battleActive:false, mode:'defender', timeLeft:90 };
+let canvas, ctx, W, H, animId;
+let entities = []; // attackers, projectiles, effects
+
+/* Initialize from serverless / mock */
+function loadState() {
+  try { const p = JSON.parse(localStorage.getItem('tg_mock_profile')||'{}'); if(p.userId) { state.gold = p.gold||state.gold; state.gems = p.gems||state.gems; state.stage = p.stage||state.stage; state.defLayout = p.defenseLayoutJson||state.defLayout; state.unlocked = p.unlockedUnitsJson||state.unlocked; state.faction = p.faction||state.faction; } } catch(e){}
+}
+function saveState() { try { localStorage.setItem('tg_mock_profile', JSON.stringify({userId:1,username:'سردار',faction:state.faction,stage:state.stage,gold:state.gold,gems:state.gems,eloRating:state.elo,castleLevel:state.castleLevel,bowLevel:state.bowLevel,defenseLayoutJson:state.defLayout,unlockedUnitsJson:state.unlocked})); } catch(e){} }
+loadState();
+
+/* ============== CANVAS ENGINE ============== */
+function resize(){ const c = document.getElementById('battle'); W = c.width = c.parentElement.clientWidth; H = c.height = c.parentElement.clientHeight; }
+function startCanvas(){ canvas = document.getElementById('battle'); ctx = canvas.getContext('2d'); resize(); window.addEventListener('resize', resize); loop(); }
+function loop(){ if(!state.battleActive) { drawWorld(); } else { update(); drawWorld(); } animId = requestAnimationFrame(loop); }
+function drawWorld(){ if(!ctx) return; ctx.fillStyle = '#0b0c15'; ctx.fillRect(0,0,W,H); // sky gradient
+  const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0b0c15'); g.addColorStop(0.6,'#1a1222'); g.addColorStop(1,'#2a1a30'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  // Ground / castle 
+  ctx.fillStyle='#2a2a3a'; ctx.fillRect(W*0.08, H*0.68, W*0.22, H*0.32);
+  ctx.fillStyle='#3a3020'; ctx.fillRect(W*0.10, H*0.72, W*0.18, H*0.28); // tower
+  ctx.fillStyle='#d4a843'; ctx.fillRect(W*0.08, H*0.65, W*0.22, H*0.05); // battlement
+  // Castle gate
+  ctx.fillStyle='#1a1a2a'; ctx.fillRect(W*0.13, H*0.78, W*0.08, H*0.15);
+  ctx.fillStyle='#7a5a36'; ctx.fillRect(W*0.13, H*0.80, W*0.08, H*0.03); // door
+  // Draw entities (enemies on right, projectiles)
+  entities.forEach(e => { if(e.dead) return; drawEntity(e); });
+  // Starfield
+  for(let i=0;i<60;i++){ const sx = (i*137 + Date.now()*0.02)%W; const sy = (i*73)%H; ctx.fillStyle = `rgba(255,255,255,${0.15+Math.sin(Date.now()*0.001+i)*0.15})`; ctx.beginPath(); ctx.arc(sx,sy,1+Math.random()*1.5,0,Math.PI*2); ctx.fill(); }
+  // HUD text over canvas
+  ctx.fillStyle='rgba(11,12,21,0.6)'; ctx.fillRect(10,10,220,70); ctx.fillStyle='#e7cfa8'; ctx.font='bold 14px Vazirmatn'; ctx.textAlign='right'; ctx.fillText('دژ جاویدان', W-20, 30); ctx.font='12px Vazirmatn'; ctx.fillText('مرحله ' + state.stage + ' | سطح ' + state.castleLevel + ' | ELO ' + state.elo, W-20, 50);
+}
+function drawEntity(e){
+  const {x,y,type,hp,maxHp,dir} = e;
+  ctx.save(); ctx.translate(x,y);
+  if(type==='wolf'){ // steppe wolf
+    ctx.fillStyle='#4a3a28'; ctx.beginPath(); ctx.ellipse(0,0,12,8,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#8a6e4a'; ctx.fillRect(-6,-4,4,4); // eye
+    ctx.fillStyle='#d4a843'; ctx.fillRect(-10,-8,3,6); // ear
+    // legs
+    ctx.fillStyle='#3a2a1a'; ctx.fillRect(-10,4,4,5); ctx.fillRect(2,4,4,5);
+  } else if(type==='div'){ // mazandaran div
+    ctx.fillStyle='#5a2a2a'; ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#8a3a3a'; ctx.beginPath(); ctx.arc(-8,-4,6,0,Math.PI*2); ctx.fill(); // head left
+    ctx.fillStyle='#e0b860'; ctx.fillRect(-14,-12,6,10); // horn
+    ctx.fillStyle='#2a1a1a'; ctx.fillRect(-12,4,4,12); ctx.fillRect(4,4,4,12); // legs
+  } else if(type==='griffin'){ // flying griffin
+    ctx.fillStyle='#7a5a2a'; ctx.beginPath(); ctx.moveTo(-12,0); ctx.lineTo(8,-8); ctx.lineTo(4,6); ctx.lineTo(-14,2); ctx.fill();
+    ctx.fillStyle='#d4a843'; ctx.beginPath(); ctx.arc(6,-2,3,0,Math.PI*2); ctx.fill(); // eye
+    ctx.fillStyle='#c09040'; ctx.fillRect(-6,-4,3,10); // wing
+  } else if(type==='siege'){ // siege ram
+    ctx.fillStyle='#4a3a28'; ctx.fillRect(-14,-10,28,20); ctx.fillStyle='#a07850'; ctx.fillRect(-6,-14,12,8); // ram head
+    ctx.fillStyle='#6a5a3a'; ctx.fillRect(-10,10,6,10); ctx.fillRect(6,10,6,10); // wheels
+  } else if(type==='elephant'){ // war elephant boss
+    ctx.fillStyle='#6a4a2a'; ctx.beginPath(); ctx.arc(0,0,22,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#3a2a1a'; ctx.fillRect(-6,-10,12,14); // head
+    ctx.fillStyle='#e0b860'; ctx.fillRect(-10,-6,4,4); // tusk left
+    ctx.fillStyle='#ddd'; ctx.fillRect(-14,4,6,10); ctx.fillRect(8,4,6,10); // legs
+    ctx.strokeStyle='#e0b860'; ctx.lineWidth=2; ctx.stroke();
+  } else if(type==='projectile'){ // arrow / dark bolt
+    ctx.fillStyle='#e0c06a'; ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#ffcc00'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-16); ctx.stroke();
+  }
+  // Health bar above
+  const ratio = Math.max(0, (e.hp||0)/(e.maxHp||100));
+  ctx.fillStyle='#333'; ctx.fillRect(-14,-22,28,6); ctx.fillStyle=ratio>0.5?'#4caf50':ratio>0.2?'#ff9800':'#f44336'; ctx.fillRect(-14,-22,28*ratio,6);
+  ctx.restore();
+}
+function spawnEntity(type, x, y, hp, maxHp){ entities.push({type,x,y,hp,maxHp,dir:1,dead:false,created:Date.now()}); }
+function spawnProjectile(fromX, fromY, toX, toY, speed=10){ entities.push({type:'projectile',x:fromX,y:fromY,dx:toX>fromX?(toX-fromX)/Math.abs(toX-fromX)*speed:0,dy:(toY-fromY)/Math.abs(toY-fromY)*speed,targetX:toX,targetY:toY,dead:false,hp:10,maxHp:10,created:Date.now()}); }
+
+function update(){
+  // Spawn waves based on mode
+  if(state.battleActive && state.mode==='defender'){
+    if(Date.now()%900<16) spawnEntity('wolf', W-20, H*0.75, 80, 80);
+    if(Date.now()%1600<16) spawnEntity('div', W-30, H*0.72, 180, 180);
+    if(state.stage>10 && Date.now()%2400<16) spawnEntity('griffin', W-10, H*0.65+Math.random()*30, 120, 120);
+  }
+  if(state.battleActive && state.mode==='attacker'){
+    if(state.darkEnergy>0 && Date.now()%700<16){ state.darkEnergy-=10; spawnEntity('wolf', W*0.7, H*0.75+Math.random()*30, 60, 60); }
+  }
+  // Move entities
+  entities = entities.filter(e => {
+    if(e.type==='projectile'){
+      e.x += e.dx||0; e.y += e.dy||0; if(Math.abs(e.x-e.targetX)<10 && Math.abs(e.y-e.targetY)<10) e.dead=true; if(e.x<0||e.x>W||e.y<0||e.y>H) e.dead=true;
+      // Hit enemy
+      entities.forEach(t => { if(t.dead||t===e||t.type==='projectile') return; if(Math.abs(t.x-e.x)<14 && Math.abs(t.y-e.y)<14){ t.hp-=15; e.dead=true; sfxHit(); if(t.hp<=0){ t.dead=true; sfxExplode(); state.gold+=10; state.elo+=2; } } });
+    } else if(e.type==='wolf'||e.type==='div'||e.type==='griffin'||e.type==='siege'||e.type==='elephant'){
+      e.x -= (e.type==='wolf'?3:e.type==='div'?1:e.type==='griffin'?2.5:e.type==='siege'?1.5:0.8);
+      if(e.x < W*0.30) e.x = W*0.30; // stop at castle gate
+      if(e.hp<=0){ e.dead=true; sfxExplode(); state.gold+=20; state.elo+=3; }
+    }
+    return !e.dead && (e.created + 10000 > Date.now() || e.hp>0);
+  });
+  state.timeLeft = Math.max(0, Math.ceil(90 - (Date.now()-state.battleStarted)/1000));
+  if(state.timeLeft<=0) endBattle();
+}
+
+/* ============== ACTIONS ============== */
+function switchFaction(f){ state.faction=f; state.mode=f; document.getElementById('defenderPanel').style.display=f==='defender'?'block':'none'; document.getElementById('attackerPanel').style.display=f==='attacker'?'block':'none'; document.getElementById('btnDef').className=f==='defender'?'':'accent'; document.getElementById('btnAtt').className=f==='attacker'?'':'accent'; if(f==='attacker') state.darkEnergy=100; saveState(); updateUI(); }
+function updateUI(){ document.getElementById('hGold').textContent = state.gold; document.getElementById('hGems').textContent = state.gems; document.getElementById('hElo').textContent = state.elo; document.getElementById('stageLabel').textContent = state.stage; document.getElementById('castleLevel').textContent = state.castleLevel; document.getElementById('darkEnergy').textContent = Math.round(state.darkEnergy); }
+function startDefender(){ state.battleActive=true; state.mode='defender'; state.battleStarted=Date.now(); entities=[]; updateUI(); document.getElementById('screenCampaign').classList.add('hidden'); closeScreenAll(); sfxBow(); }
+function endBattle(){ state.battleActive=false; entities=[]; updateUI(); openChest(); }
+function openChest(){ document.getElementById('chest-modal').classList.remove('hidden'); const tiers=['Bronze','Silver','Shahnameh Golden']; const tier = tiers[Math.floor(Math.random()*3)]; document.getElementById('chestTier').textContent = tier; const rewards = []; for(let i=0;i<(tier==='Bronze'?1:tier==='Silver'?2:3);i++){ rewards.push({label:'طلا',val:Math.floor(Math.random()*200)+50}); } const html = rewards.map(r=>`<div class="rew"><strong>${r.val}</strong>${r.label}</div>`).join(''); document.getElementById('chestRewards').innerHTML = html; state.gold += rewards.reduce((s,r)=>s+r.val,0); state.gems += Math.floor(Math.random()*3)+1; sfxChest(); saveState(); updateUI(); }
+function closeChest(){ document.getElementById('chest-modal').classList.add('hidden'); }
+function spawnWave(){ if(state.darkEnergy>=20){ state.darkEnergy-=20; for(let i=0;i<3;i++) spawnEntity('wolf', W-20, H*0.72+Math.random()*20, 70,70); sfxBow(); } }
+function castDarkSpell(){ if(state.darkEnergy>=30){ state.darkEnergy-=30; entities.forEach(e=>{ if(e.hp) e.hp-=30; if(e.hp<=0) e.dead=true; }); sfxExplode(); } }
+function completeStageAct(){ serverlessCall('completeStage',{stage:state.stage+1}).then(r=>{ if(r.ok){ state.stage = (r.stage||state.stage+1); saveState(); updateUI(); openCampaign(); } }); }
+
+/* ============== SCREENS ============== */
+function closeScreenAll(){ document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden')); }
+function openCampaign(){ closeScreenAll(); document.getElementById('screenCampaign').classList.remove('hidden'); buildChapters(); }
+function closeCampaign(){ closeScreenAll(); }
+function buildChapters(){
+  const chapters = [
+    {num:1,name:'سپیده زاگرس و اکباتان',stages:'۱–۵',icon:'🌅'},
+    {num:2,name:'هفت آزمایش مازندران',stages:'۶–۱۰',icon:'🌲'},
+    {num:3,name:'جبهه اکسوس و جنگ‌های توران',stages:'۱۱–۱۵',icon:'⚔️'},
+    {num:4,name:'دروازه‌های تخت جمشید',stages:'۱۶–۲۰',icon:'🏛️'},
+    {num:5,name:'قلعه قطسفون',stages:'۲۱–۲۵',icon:'🏰'},
+  ];
+  document.getElementById('chapters').innerHTML = chapters.map(c=>`<div class="chapter" onclick="loadChapter(${c.num})"><div class="chapter-icon">${c.icon}</div><div class="chapter-info"><h4>فصل ${c.num}: ${c.name}</h4><p>مراحل ${c.stages}</p></div></div>`).join('');
+}
+function loadChapter(num){ state.stage = num*5-4; saveState(); updateUI(); closeCampaign(); startDefender(); }
+function openPvP(){ closeScreenAll(); document.getElementById('screenPvP').classList.remove('hidden'); buildPvP(); }
+function closePvP(){ closeScreenAll(); }
+function buildPvP(){ serverlessCall('pvpArena',{action:'list'}).then(r=>{ const list = (r.targets||[]); document.getElementById('pvpList').innerHTML = list.map(p=>`<div class="card"><h4>${p.username||'سردار '} — ELO ${p.eloRating||1000}</h4><div class="card-row"><button onclick="raidTarget(${p.userId},'${p.username||''}')">⚔️ حمله</button><span>دفاع: ${p.defenseLayoutJson?'تنظیم شده':'پیش‌فرض'}</span></div></div>`).join('<br>')||'<div class="card">هیچ دشمنی یافت نشد.</div>'; }); }
+function raidTarget(id,name){ serverlessCall('submitRaid',{defenderId:id,attackerName:'سردار',attackerWon:true,goldStolen:30,eloDelta:+20}).then(r=>{ if(r.ok){ alert('حمله انجام شد! پیام انتقامی به دشمن ارسال شد.'); openCampaign(); } }); }
+function openClan(){ closeScreenAll(); document.getElementById('screenClan').classList.remove('hidden'); serverlessCall('clanBoss',{action:'get',clanId:1}).then(r=>{ const c = r.clan||{}; document.getElementById('clanBossPanel').innerHTML = `<div class="card"><h2>📜 ${c.name||'هزارم'}</h2><p>رئیس جنگ: سطح ${c.bossLevel||1}</p><div style="margin-top:8px;font-weight:900;color:var(--gold);font-size:20px;">HP: ${c.bossHp||0} / ${c.bossMaxHp||1000}</div><div style="width:100%;height:12px;background:#333;border-radius:6px;overflow:hidden;margin-top:6px;"><div style="width:${((c.bossHp||0)/(c.bossMaxHp||1))*100}%;height:100%;background:linear-gradient(90deg,#d4a843,#ff9900);"></div></div></div>`; }); }
+function closeClan(){ closeScreenAll(); }
+function attackBoss(){ serverlessCall('clanBoss',{action:'attack',clanId:1,damage:150}).then(r=>{ if(r.ok){ openClan(); if(r.defeated) alert('رئیس مغلوب شد!'); } }); }
+function openShop(){ closeScreenAll(); document.getElementById('screenShop').classList.remove('hidden'); buildShop(); }
+function closeShop(){ document.getElementById('shop-modal').classList.add('hidden'); closeScreenAll(); }
+function buildShop(){ document.getElementById('shopGrid').innerHTML = `<div class="shop-card"><h4>💎 بسته جواهر</h4><p>50 جواهر</p><button onclick="buyStars('gem_pack')">خرید با XTR</button></div><div class="shop-card"><h4>👑 بلیط نبرد</h4><p>دسترسی فصلی</p><button onclick="buyStars('pass')">خرید با XTR</button></div><div class="shop-card"><h4>📦 صندوق</h4><p>باز کردن فوری</p><button onclick="buyStars('instant_chest')">خرید با XTR</button></div>`; }
+function buyStars(item){ serverlessCall('createStarsInvoice',{item}).then(r=>{ if(r.url){ window.open(r.url, '_blank'); } else { alert('پیوند پرداخت ساخته شد'); } }); }
+
+/* ============== INIT ============== */
+document.addEventListener('DOMContentLoaded', ()=>{
+  startCanvas();
+  updateUI();
+  buildChapters();
+  buildShop();
+  document.getElementById('btnDef').onclick = () => switchFaction('defender');
+  document.getElementById('btnAtt').onclick = () => switchFaction('attacker');
+  // Show campaign as landing
+  openCampaign();
+});
+</script>
+</body>
+</html>
